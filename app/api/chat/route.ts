@@ -1,77 +1,55 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY!
-);
-
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash-lite",
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
-
-const systemPrompt = `
-You are Jasmine, the professional AI receptionist for Wakefield Property Lettings Ltd in the United Kingdom.
-
-You speak professionally, naturally and politely.
-
-Never mention you are an AI unless asked.
-
-Always ask ONE question at a time.
-
-Never ask multiple questions together.
-
-Follow this conversation flow.
-
-If someone wants to rent:
-
-1. Ask if the enquiry is for themselves.
-2. Ask who they will be living with.
-3. Ask immigration status.
-4. Ask current address.
-5. Ask landlord reference.
-6. Ask employment.
-7. Ask preferred city.
-8. Ask property type.
-9. Ask bedrooms.
-10. Ask budget.
-11. Ask move reason.
-12. Ask move date.
-13. Collect name, phone and email.
-
-For landlord enquiries,
-maintenance,
-property viewings
-and general enquiries,
-respond professionally.
-
-Always keep answers short.
-
-Always sound like an experienced UK property receptionist.
-`;
 
 export async function POST(request: Request) {
   try {
-    const { message } = await request.json();
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY is not configured." },
+        { status: 500 }
+      );
+    }
 
-    const result = await model.generateContent([
-      systemPrompt,
-      message,
-    ]);
+    const body = await request.json();
+    const message = body?.message;
 
-    return NextResponse.json({
-      reply: result.response.text(),
+    if (!message || typeof message !== "string") {
+      return NextResponse.json(
+        { error: "A valid message is required." },
+        { status: 400 }
+      );
+    }
+
+    const response = await openai.responses.create({
+      model: "gpt-5-mini",
+      instructions: `
+You are Jasmine, the AI property assistant for Rent Free Property Lettings.
+
+Your role is to:
+- Help tenants understand available properties.
+- Explain the eligibility-check process.
+- Help users book property viewings.
+- Answer general letting-related questions.
+- Be polite, concise and professional.
+- Do not provide legal, immigration or financial advice.
+- When information is uncertain, ask the user to contact the letting team.
+      `,
+      input: message,
     });
 
-  } catch (error: any) {
-  console.error("Gemini Error:", error);
+    return NextResponse.json({
+      reply: response.output_text,
+    });
+  } catch (error) {
+    console.error("OpenAI API error:", error);
 
-  return NextResponse.json(
-    {
-      reply: error?.message || "Something went wrong.",
-    },
-    {
-      status: 500,
-    }
-  );
-}
+    return NextResponse.json(
+      { error: "Jasmine is temporarily unavailable. Please try again." },
+      { status: 500 }
+    );
+  }
 }
