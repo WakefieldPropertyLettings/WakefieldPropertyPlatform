@@ -44,7 +44,7 @@ export default function Hero() {
 
   return (
     <>
-      <section className="relative min-h-[650px] overflow-visible bg-[#071b3a] lg:min-h-[655px]">
+      <section className="relative overflow-visible bg-[#071b3a] lg:min-h-[655px]">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=2200&auto=format&fit=crop&q=90"
@@ -57,14 +57,14 @@ export default function Hero() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/60 via-transparent to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-[1220px] px-5 pb-44 pt-24 sm:px-8 lg:pb-48 lg:pt-24">
+        <div className="relative z-10 mx-auto max-w-[1220px] px-5 pb-8 pt-16 sm:px-8 sm:pt-20 lg:pb-48 lg:pt-24">
           <div className="max-w-[650px]">
             <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#efad3f] backdrop-blur-sm">
               <span aria-hidden="true">✨</span>
               Wakefield&apos;s modern letting agency
             </div>
 
-            <h1 className="font-serif text-[48px] font-bold leading-[1.02] tracking-[-0.025em] text-white sm:text-[60px] lg:text-[72px]">
+            <h1 className="font-serif text-[42px] font-bold leading-[1.02] tracking-[-0.025em] text-white sm:text-[60px] lg:text-[72px]">
               Find a home you&apos;ll
               <br />
               <span className="text-[#efad3f]">love</span> in Wakefield.
@@ -77,13 +77,13 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="absolute bottom-[-62px] left-0 right-0 z-20 px-5 sm:px-8">
+        <div className="relative z-20 px-5 pb-8 sm:px-8 lg:absolute lg:bottom-[-62px] lg:left-0 lg:right-0 lg:pb-0">
           <form
             onSubmit={handleSearch}
-            className="mx-auto max-w-[1220px] rounded-[28px] bg-white p-6 shadow-[0_24px_70px_rgba(7,27,58,0.22)] sm:p-7"
+            className="mx-auto max-w-[1220px] rounded-[24px] bg-white p-4 shadow-[0_24px_70px_rgba(7,27,58,0.22)] sm:rounded-[28px] sm:p-7"
           >
-            <div className="grid gap-4 lg:grid-cols-[2fr_1fr_1fr_0.95fr_0.95fr]">
-              <label className="block">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[2fr_1fr_1fr_0.95fr_0.95fr]">
+              <label className="col-span-2 block lg:col-span-1">
                 <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-600">
                   Location
                 </span>
@@ -194,7 +194,7 @@ export default function Hero() {
         </div>
       </section>
 
-      <section className="border-b border-slate-200 bg-[#faf8f3] px-5 pb-8 pt-24 sm:px-8">
+      <section className="border-b border-slate-200 bg-[#faf8f3] px-5 pb-8 pt-10 sm:px-8 lg:pt-24">
         <div className="mx-auto grid max-w-[1220px] grid-cols-2 gap-y-8 md:grid-cols-4">
           <article className="border-r border-slate-200 pr-4 md:px-8 md:first:pl-0">
             <p className="font-serif text-4xl font-bold text-[#071b3a]">
@@ -211,7 +211,7 @@ export default function Hero() {
               4.9★
             </p>
 
-            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-600">
+            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-600">  
               Reviews
             </p>
           </article>
