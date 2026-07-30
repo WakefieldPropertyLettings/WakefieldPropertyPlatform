@@ -34,6 +34,15 @@ type PropertyEnquiry = {
   requirements: string;
 };
 
+type ApiErrorResponse = {
+  error?: string;
+};
+
+type JasmineResponse = {
+  answer?: string;
+  error?: string;
+};
+
 const emptyEnquiry: PropertyEnquiry = {
   name: "",
   phone: "",
@@ -51,7 +60,8 @@ export default function JasmineChatbot() {
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [stage, setStage] = useState<ConversationStage>("menu");
-  const [enquiry, setEnquiry] = useState<PropertyEnquiry>(emptyEnquiry);
+  const [enquiry, setEnquiry] =
+    useState<PropertyEnquiry>(emptyEnquiry);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -101,7 +111,6 @@ export default function JasmineChatbot() {
 
   function startPropertySearch() {
     addUserMessage("Find a Property");
-
     setEnquiry(emptyEnquiry);
     setStage("name");
 
@@ -123,7 +132,7 @@ export default function JasmineChatbot() {
     addUserMessage("Book a Viewing");
 
     addAssistantMessage(
-      "Viewing bookings will be added next. For now, please use Find a Property to submit your contact details and property requirements."
+      "To request a viewing, please contact our office on 07438 647424 or email admin@wakefieldpropertylettings.co.uk. You can also submit your details using Find a Property."
     );
   }
 
@@ -131,7 +140,7 @@ export default function JasmineChatbot() {
     addUserMessage("Landlord Enquiry");
 
     addAssistantMessage(
-      "The landlord enquiry service will be added next. Our first step is completing the tenant property enquiry system."
+      "We would be happy to discuss letting or managing your property. Please contact Wakefield Property Lettings on 07438 647424 or email admin@wakefieldpropertylettings.co.uk."
     );
   }
 
@@ -139,7 +148,7 @@ export default function JasmineChatbot() {
     addUserMessage("Report Maintenance");
 
     addAssistantMessage(
-      "The maintenance reporting service will be added after the property enquiry system is completed."
+      "Please use the Report Issue page on our website to submit maintenance details. For urgent matters, contact the office on 07438 647424."
     );
   }
 
@@ -152,7 +161,6 @@ export default function JasmineChatbot() {
     }));
 
     setStage("bedrooms");
-
     addAssistantMessage("How many bedrooms do you need?");
   }
 
@@ -192,60 +200,62 @@ Is this information correct?`
   }
 
   async function confirmEnquiry() {
-  if (isLoading) {
-    return;
-  }
+    if (isLoading) {
+      return;
+    }
 
-  addUserMessage("Confirm enquiry");
-  setIsLoading(true);
-
-  try {
-    const response = await fetch("/api/enquiry", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(enquiry),
-    });
-
-    const responseText = await response.text();
-
-    console.log("Enquiry API status:", response.status);
-    console.log("Enquiry API response:", responseText);
-
-    let data;
+    addUserMessage("Confirm enquiry");
+    setIsLoading(true);
 
     try {
-      data = JSON.parse(responseText);
-    } catch {
-      throw new Error(
-        `API returned HTML instead of JSON. Status: ${response.status}`
+      const response = await fetch("/api/enquiry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(enquiry),
+      });
+
+      const responseText = await response.text();
+
+      let data: ApiErrorResponse = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as ApiErrorResponse;
+        } catch {
+          throw new Error(
+            `The enquiry service returned an invalid response. Status: ${response.status}`
+          );
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Unable to submit your enquiry."
+        );
+      }
+
+      addAssistantMessage(
+        `Thank you, ${enquiry.name}. Your property enquiry has been submitted successfully. Our team will contact you as soon as possible.`
       );
+
+      setStage("completed");
+    } catch (error) {
+      console.error("Enquiry submission error:", error);
+
+      addAssistantMessage(
+        error instanceof Error
+          ? `Sorry, your enquiry could not be saved: ${error.message}`
+          : "Sorry, your enquiry could not be saved."
+      );
+    } finally {
+      setIsLoading(false);
     }
-
-    if (!response.ok) {
-      throw new Error(data.error || "Unable to submit your enquiry.");
-    }
-
-    addAssistantMessage(
-      `Thank you, ${enquiry.name}. Your property enquiry has been submitted successfully.`
-    );
-
-    setStage("completed");
-  } catch (error) {
-    addAssistantMessage(
-      error instanceof Error
-        ? `Sorry, your enquiry could not be saved: ${error.message}`
-        : "Sorry, your enquiry could not be saved."
-    );
-  } finally {
-    setIsLoading(false);
   }
-}
 
   function restartEnquiry() {
     addUserMessage("Start again");
-
     setEnquiry(emptyEnquiry);
     setStage("name");
 
@@ -256,9 +266,9 @@ Is this information correct?`
 
   function returnToMenu() {
     addUserMessage("Main menu");
-
     setStage("menu");
     setEnquiry(emptyEnquiry);
+    setQuestion("");
 
     addAssistantMessage("What would you like help with today?");
   }
@@ -277,10 +287,24 @@ Is this information correct?`
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+
+      let data: JasmineResponse = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as JasmineResponse;
+        } catch {
+          throw new Error(
+            "Jasmine returned an invalid response."
+          );
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || "Jasmine is currently unavailable.");
+        throw new Error(
+          data.error || "Jasmine is currently unavailable."
+        );
       }
 
       addAssistantMessage(
@@ -288,6 +312,8 @@ Is this information correct?`
           "Sorry, I could not answer that question at the moment."
       );
     } catch (error) {
+      console.error("Jasmine request error:", error);
+
       addAssistantMessage(
         error instanceof Error
           ? error.message
@@ -308,162 +334,157 @@ Is this information correct?`
     addUserMessage(trimmedAnswer);
     setQuestion("");
 
-    if (stage === "name") {
-      if (trimmedAnswer.length < 2) {
-        addAssistantMessage("Please enter your full name.");
+    switch (stage) {
+      case "name": {
+        if (trimmedAnswer.length < 2) {
+          addAssistantMessage("Please enter your full name.");
+          return;
+        }
+
+        setEnquiry((current) => ({
+          ...current,
+          name: trimmedAnswer,
+        }));
+
+        setStage("phone");
+
+        addAssistantMessage(
+          `Thank you, ${trimmedAnswer}. What is the best mobile number to contact you on?`
+        );
+
         return;
       }
 
-      setEnquiry((current) => ({
-        ...current,
-        name: trimmedAnswer,
-      }));
+      case "phone": {
+        if (!isValidPhone(trimmedAnswer)) {
+          addAssistantMessage(
+            "Please enter a valid UK telephone number, for example 07700 900123."
+          );
+          return;
+        }
 
-      setStage("phone");
+        setEnquiry((current) => ({
+          ...current,
+          phone: trimmedAnswer,
+        }));
 
-      addAssistantMessage(
-        `Thank you, ${trimmedAnswer}. What is the best mobile number to contact you on?`
-      );
+        setStage("email");
+        addAssistantMessage("What is your email address?");
 
-      return;
-    }
+        return;
+      }
 
-    if (stage === "phone") {
-      if (!isValidPhone(trimmedAnswer)) {
+      case "email": {
+        if (!isValidEmail(trimmedAnswer)) {
+          addAssistantMessage(
+            "That email address does not appear to be valid. Please enter it again."
+          );
+          return;
+        }
+
+        setEnquiry((current) => ({
+          ...current,
+          email: trimmedAnswer,
+        }));
+
+        setStage("propertyType");
+
         addAssistantMessage(
-          "Please enter a valid UK mobile number, for example 07700 900123."
+          "What type of property are you looking for?"
+        );
+
+        return;
+      }
+
+      case "propertyType":
+        selectPropertyType(trimmedAnswer);
+        return;
+
+      case "bedrooms":
+        selectBedrooms(trimmedAnswer);
+        return;
+
+      case "location":
+        setEnquiry((current) => ({
+          ...current,
+          location: trimmedAnswer,
+        }));
+
+        setStage("budget");
+
+        addAssistantMessage(
+          "What is your maximum monthly rental budget? For example, £900 per month."
+        );
+
+        return;
+
+      case "budget":
+        setEnquiry((current) => ({
+          ...current,
+          budget: trimmedAnswer,
+        }));
+
+        setStage("moveInDate");
+
+        addAssistantMessage(
+          "When would you like to move in? You can enter a date or say as soon as possible."
+        );
+
+        return;
+
+      case "moveInDate":
+        setEnquiry((current) => ({
+          ...current,
+          moveInDate: trimmedAnswer,
+        }));
+
+        setStage("requirements");
+
+        addAssistantMessage(
+          "Do you have any additional requirements, such as parking, a garden, furnished accommodation, pet-friendly accommodation or bills included? Type “None” if you have no additional requirements."
+        );
+
+        return;
+
+      case "requirements": {
+        const completedEnquiry: PropertyEnquiry = {
+          ...enquiry,
+          requirements: trimmedAnswer,
+        };
+
+        setEnquiry(completedEnquiry);
+        showEnquirySummary(completedEnquiry);
+
+        return;
+      }
+
+      case "generalQuestion":
+        await sendGeneralQuestion(trimmedAnswer);
+        return;
+
+      case "menu":
+        addAssistantMessage(
+          "Please select one of the available options below."
         );
         return;
-      }
 
-      setEnquiry((current) => ({
-        ...current,
-        phone: trimmedAnswer,
-      }));
-
-      setStage("email");
-
-      addAssistantMessage("What is your email address?");
-
-      return;
-    }
-
-    if (stage === "email") {
-      if (!isValidEmail(trimmedAnswer)) {
+      case "confirmation":
         addAssistantMessage(
-          "That email address does not appear to be valid. Please enter it again."
+          "Please use the Confirm enquiry or Start again button below."
         );
         return;
-      }
 
-      setEnquiry((current) => ({
-        ...current,
-        email: trimmedAnswer,
-      }));
-
-      setStage("propertyType");
-
-      addAssistantMessage("What type of property are you looking for?");
-
-      return;
-    }
-
-    if (stage === "propertyType") {
-      selectPropertyType(trimmedAnswer);
-      return;
-    }
-
-    if (stage === "bedrooms") {
-      selectBedrooms(trimmedAnswer);
-      return;
-    }
-
-    if (stage === "location") {
-      setEnquiry((current) => ({
-        ...current,
-        location: trimmedAnswer,
-      }));
-
-      setStage("budget");
-
-      addAssistantMessage(
-        "What is your maximum monthly rental budget? For example, £900 per month."
-      );
-
-      return;
-    }
-
-    if (stage === "budget") {
-      setEnquiry((current) => ({
-        ...current,
-        budget: trimmedAnswer,
-      }));
-
-      setStage("moveInDate");
-
-      addAssistantMessage(
-        "When would you like to move in? You can enter a date or say as soon as possible."
-      );
-
-      return;
-    }
-
-    if (stage === "moveInDate") {
-      setEnquiry((current) => ({
-        ...current,
-        moveInDate: trimmedAnswer,
-      }));
-
-      setStage("requirements");
-
-      addAssistantMessage(
-        "Do you have any additional requirements, such as parking, a garden, furnished accommodation, pet-friendly accommodation or bills included? Type “None” if you have no additional requirements."
-      );
-
-      return;
-    }
-
-    if (stage === "requirements") {
-      const completedEnquiry = {
-        ...enquiry,
-        requirements: trimmedAnswer,
-      };
-
-      setEnquiry(completedEnquiry);
-      showEnquirySummary(completedEnquiry);
-
-      return;
-    }
-
-    if (stage === "generalQuestion") {
-      await sendGeneralQuestion(trimmedAnswer);
-      return;
-    }
-
-    if (stage === "menu") {
-      addAssistantMessage(
-        "Please select one of the available options below."
-      );
-
-      return;
-    }
-
-    if (stage === "confirmation") {
-      addAssistantMessage(
-        "Please use the Confirm enquiry or Start again button below."
-      );
-
-      return;
-    }
-
-    if (stage === "completed") {
-      addAssistantMessage(
-        "Your enquiry has already been completed. Use the Main menu button to start another request."
-      );
+      case "completed":
+        addAssistantMessage(
+          "Your enquiry has already been completed. Use the Main menu button to start another request."
+        );
+        return;
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     if (!question.trim() || isLoading) {
@@ -508,7 +529,7 @@ Is this information correct?`
     <div className="fixed bottom-5 right-5 z-[9999]">
       {isOpen && (
         <div className="mb-4 flex h-[560px] w-[calc(100vw-40px)] max-w-[390px] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl">
-          <div className="flex items-center justify-between bg-black px-5 py-4 text-white">
+          <header className="flex items-center justify-between bg-black px-5 py-4 text-white">
             <div>
               <h2 className="text-lg font-bold">Jasmine AI</h2>
 
@@ -525,9 +546,12 @@ Is this information correct?`
             >
               ×
             </button>
-          </div>
+          </header>
 
-          <div className="flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-4">
+          <div
+            className="flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-4"
+            aria-live="polite"
+          >
             {messages.map((message, index) => (
               <div
                 key={`${message.role}-${index}`}
@@ -595,16 +619,20 @@ Is this information correct?`
 
             {stage === "propertyType" && (
               <div className="grid grid-cols-2 gap-2">
-                {["House", "Flat", "Studio", "Room"].map((propertyType) => (
-                  <button
-                    key={propertyType}
-                    type="button"
-                    onClick={() => selectPropertyType(propertyType)}
-                    className="rounded-xl border border-neutral-300 bg-white px-3 py-3 text-sm font-semibold transition hover:border-black hover:bg-neutral-100"
-                  >
-                    {propertyType}
-                  </button>
-                ))}
+                {["House", "Flat", "Studio", "Room"].map(
+                  (propertyType) => (
+                    <button
+                      key={propertyType}
+                      type="button"
+                      onClick={() =>
+                        selectPropertyType(propertyType)
+                      }
+                      className="rounded-xl border border-neutral-300 bg-white px-3 py-3 text-sm font-semibold transition hover:border-black hover:bg-neutral-100"
+                    >
+                      {propertyType}
+                    </button>
+                  )
+                )}
               </div>
             )}
 
@@ -628,7 +656,8 @@ Is this information correct?`
                 <button
                   type="button"
                   onClick={confirmEnquiry}
-                  className="rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+                  disabled={isLoading}
+                  className="rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Confirm enquiry
                 </button>
@@ -636,7 +665,8 @@ Is this information correct?`
                 <button
                   type="button"
                   onClick={restartEnquiry}
-                  className="rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold transition hover:border-black"
+                  disabled={isLoading}
+                  className="rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold transition hover:border-black disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Start again
                 </button>
@@ -679,9 +709,20 @@ Is this information correct?`
                         : "text"
                   }
                   value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
+                  onChange={(event) =>
+                    setQuestion(event.target.value)
+                  }
                   placeholder={getPlaceholder()}
                   disabled={isLoading}
+                  autoComplete={
+                    stage === "email"
+                      ? "email"
+                      : stage === "phone"
+                        ? "tel"
+                        : stage === "name"
+                          ? "name"
+                          : "off"
+                  }
                   className="min-w-0 flex-1 rounded-xl border border-neutral-300 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-black"
                 />
 
@@ -695,7 +736,8 @@ Is this information correct?`
               </div>
 
               <p className="mt-2 text-center text-[10px] text-neutral-400">
-                Please confirm important property details with our team.
+                Please confirm important property details with our
+                team.
               </p>
             </form>
           )}
@@ -704,8 +746,15 @@ Is this information correct?`
 
       <button
         type="button"
-        onClick={() => setIsOpen((currentValue) => !currentValue)}
-        aria-label="Open Jasmine AI chatbot"
+        onClick={() =>
+          setIsOpen((currentValue) => !currentValue)
+        }
+        aria-label={
+          isOpen
+            ? "Close Jasmine AI chatbot"
+            : "Open Jasmine AI chatbot"
+        }
+        aria-expanded={isOpen}
         className="flex h-16 w-16 items-center justify-center rounded-full bg-black text-white shadow-2xl transition duration-200 hover:scale-105 hover:bg-neutral-800"
       >
         {isOpen ? (
@@ -721,6 +770,7 @@ Is this information correct?`
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
           </svg>
