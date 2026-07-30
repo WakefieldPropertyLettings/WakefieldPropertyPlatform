@@ -1,7 +1,14 @@
 import PropertyCard from "@/components/property/PropertyCard";
-import { properties } from "@/data/properties";
+import { supabase } from "@/lib/supabase";
+export default async function PropertiesPage() {
+  const { data: properties, error } = await supabase
+  .from("properties")
+  .select("*")
+  .order("created_at", { ascending: false });
 
-export default function PropertiesPage() {
+if (error) {
+  console.error(error);
+}
   return (
     <main className="min-h-screen bg-gray-100">
 
@@ -46,14 +53,14 @@ export default function PropertiesPage() {
 
         <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
 
-          {properties.map((property) => (
+          {properties?.map((property) => (
 
-            <PropertyCard
-              key={property.id}
-              property={property}
-            />
+  <PropertyCard
+    key={property.id}
+    property={property}
+  />
 
-          ))}
+))}
 
         </div>
 

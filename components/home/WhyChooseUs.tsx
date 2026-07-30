@@ -10,66 +10,77 @@ const features = [
     icon: ShieldCheck,
     title: "Professional Property Management",
     description:
-      "We manage every property with professionalism, transparency and care.",
+      "Every property is managed with complete transparency, regular inspections and dedicated landlord support.",
   },
   {
     icon: Wrench,
-    title: "Fast Maintenance Support",
+    title: "Fast Maintenance",
     description:
-      "Quick response to maintenance requests to keep tenants and landlords happy.",
+      "Maintenance issues are handled quickly using trusted local contractors and digital reporting.",
   },
   {
     icon: Users,
-    title: "Trusted Local Team",
+    title: "Experienced Local Team",
     description:
-      "Our experienced team understands the Wakefield property market.",
+      "Our Wakefield team understands the local rental market and helps tenants and landlords every day.",
   },
   {
     icon: Clock,
-    title: "Simple Rental Process",
+    title: "Simple Lettings Process",
     description:
-      "A smooth and stress-free letting process from enquiry to move-in.",
+      "From viewing to moving in, we make renting straightforward with clear communication at every stage.",
   },
 ];
 
 export default function WhyChooseUs() {
   return (
-    <section className="bg-gray-50 py-20">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="bg-[#faf8f3] px-5 py-24 lg:px-8">
+      <div className="mx-auto max-w-[1220px]">
 
-        <div className="text-center">
-          <h2 className="text-4xl font-bold text-gray-900">
-            Why Choose Wakefield Property Letting Ltd
+        <div className="mb-16 max-w-3xl">
+
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d69d35]">
+            Why choose us
+          </p>
+
+          <h2 className="mt-4 font-serif text-4xl font-bold leading-tight text-[#071b3a] sm:text-5xl">
+            Property experts
+            <br />
+            you can trust.
           </h2>
 
-          <p className="mt-4 text-lg text-gray-600">
-            Trusted by landlords and tenants across Wakefield.
+          <p className="mt-6 text-lg leading-8 text-slate-600">
+            We combine local expertise with modern technology to deliver an
+            outstanding experience for landlords and tenants throughout
+            Wakefield.
           </p>
+
         </div>
 
-        <div className="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-2">
 
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="rounded-2xl bg-white p-8 shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              className="rounded-[28px] bg-white p-8 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
-              <feature.icon
-                size={48}
-                className="mb-6 text-blue-900"
-              />
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#efad3f] text-[#071b3a]">
+                <feature.icon size={30} strokeWidth={2} />
+              </div>
 
-              <h3 className="mb-3 text-xl font-semibold">
+              <h3 className="text-2xl font-bold text-[#071b3a]">
                 {feature.title}
               </h3>
 
-              <p className="text-gray-600">
+              <p className="mt-4 text-base leading-7 text-slate-600">
                 {feature.description}
               </p>
-            </div>
+
+            </article>
           ))}
 
         </div>
+
       </div>
     </section>
   );

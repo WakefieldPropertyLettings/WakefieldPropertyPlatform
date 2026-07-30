@@ -26,11 +26,11 @@ export default function ContactPage() {
             <div className="space-y-5 text-lg">
 
               <p>
-                📍 Wakefield, West Yorkshire
+                📍 219 Kirkgate, Wakefield, West Yorkshire
               </p>
 
               <p>
-                📞 01924 000000
+                📞 07438647424
               </p>
 
               <p>
@@ -38,14 +38,23 @@ export default function ContactPage() {
               </p>
 
               <p>
-                🕒 Monday – Saturday
+                🕒 Monday – Friday (10:00 AM – 5:00 PM)
+
+              </p>
+              <p>
+              
+                🕒 Saturday (10:00 AM – 12:00 PM)
               </p>
 
             </div>
 
-            <div className="mt-10 h-80 rounded-xl bg-gray-300 flex items-center justify-center">
-              Google Maps (Coming Soon)
-            </div>
+            <Link
+  href="https://maps.google.com/?q=219+Kirkgate+Wakefield"
+  target="_blank"
+  className="mt-5 inline-flex rounded-xl bg-[#071b3a] px-6 py-3 font-semibold text-white"
+>
+  Get Directions
+</Link>
 
           </div>
 

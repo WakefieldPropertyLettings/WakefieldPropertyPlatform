@@ -59,9 +59,45 @@ const images = [
             </p>
 
             <p className="mt-4 text-4xl font-bold text-[#D4AF37]">
-              {property.price}
-            </p>
+  £{property.price} PCM
+</p>
+<div className="mt-5 flex flex-wrap gap-3">
 
+  <span className="rounded-full bg-blue-100 px-4 py-2 text-sm">
+    {property.property_type}
+  </span>
+
+  {property.furnished && (
+    <span className="rounded-full bg-green-100 px-4 py-2 text-sm">
+      Furnished
+    </span>
+  )}
+
+  {property.bills_included && (
+    <span className="rounded-full bg-yellow-100 px-4 py-2 text-sm">
+      Bills Included
+    </span>
+  )}
+
+  {property.parking && (
+    <span className="rounded-full bg-purple-100 px-4 py-2 text-sm">
+      Parking
+    </span>
+  )}
+
+  {property.garden && (
+    <span className="rounded-full bg-pink-100 px-4 py-2 text-sm">
+      Garden
+    </span>
+  )}
+
+  {property.pet_friendly && (
+    <span className="rounded-full bg-orange-100 px-4 py-2 text-sm">
+      Pet Friendly
+    </span>
+  )}
+
+</div>
             <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
 
               <div className="rounded-xl bg-white p-5 text-center shadow">
@@ -97,14 +133,62 @@ const images = [
             <div className="mt-10 rounded-2xl bg-white p-8 shadow">
 
               <h2 className="text-2xl font-bold">
-                Property Description
+                
+                <div className="mt-8 grid gap-4 md:grid-cols-2">
+
+<div className="rounded-xl bg-gray-50 p-5">
+
+<h3 className="font-bold">
+Deposit
+</h3>
+
+<p className="mt-2">
+£{property.deposit}
+</p>
+
+</div>
+<div className="mt-10 rounded-2xl bg-white p-8 shadow">
+
+  <h2 className="text-2xl font-bold mb-6">
+    Property Location
+  </h2>
+
+  {property.google_map ? (
+    <iframe
+      src={property.google_map}
+      width="100%"
+      height="400"
+      style={{ border: 0 }}
+      loading="lazy"
+      allowFullScreen
+      referrerPolicy="no-referrer-when-downgrade"
+      className="rounded-xl"
+    />
+  ) : (
+    <p className="text-gray-500">
+      Map not available.
+    </p>
+  )}
+
+</div>
+<div className="rounded-xl bg-gray-50 p-5">
+
+<h3 className="font-bold">
+Available From
+</h3>
+
+<p className="mt-2">
+{property.available_from}
+</p>
+
+</div>
+
+</div>
               </h2>
 
               <p className="mt-5 leading-8 text-gray-600">
-                This beautifully presented property offers spacious accommodation,
-                excellent transport links, modern interiors and a fantastic
-                location within Wakefield.
-              </p>
+  {property.description}
+</p>
 
             </div>
 

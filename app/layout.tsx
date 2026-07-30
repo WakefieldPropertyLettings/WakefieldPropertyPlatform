@@ -1,21 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import JasmineChatbot from "@/components/JasmineChatbot";
+import CookieConsent from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
-  title: "Wakefield Property Letting Ltd",
-  description: "Proffessional property lettings and management services in Wakefield.",
+  title: "Wakefield Property Lettings",
+  description:
+    "Professional property lettings services in Wakefield and surrounding areas.",
 };
 
 export default function RootLayout({
@@ -24,15 +18,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        {children}
+    <html lang="en">
+      <body className="bg-white text-slate-900">
+        <Navbar />
 
-       
+        {/* Prevent content from being hidden behind the fixed navbar */}
+        <main className="min-h-screen pt-[82px]">
+          {children}
+        </main>
+
+        <Footer />
+
+        <JasmineChatbot />
+        <CookieConsent />
       </body>
     </html>
+    
   );
 }
