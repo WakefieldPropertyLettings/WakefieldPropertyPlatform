@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-import JasmineAssistant from "@/components/property/JasmineAssistant";
 import PropertyGallery from "@/components/property/PropertyGallery";
 import { createClient } from "@/lib/supabase/server";
 
@@ -276,7 +274,7 @@ export default async function PropertyDetailsPage({ params }: Props) {
                 Book viewing
               </Link>
 
-              <JasmineAssistant property={property} />
+              
 
               <div className="mt-8 rounded-xl bg-gray-100 p-5">
                 <h3 className="font-bold text-[#0B1F3A]">

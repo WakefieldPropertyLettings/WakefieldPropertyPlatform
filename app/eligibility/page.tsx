@@ -4,8 +4,10 @@ import { useState } from "react";
 import ProgressBar from "./components/ProgressBar";
 import QuestionCard from "./components/QuestionCard";
 import { questions } from "./components/questions";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+
+const supabase = createClient();
 
 export default function EligibilityPage() {
   const [step, setStep] = useState(0);
