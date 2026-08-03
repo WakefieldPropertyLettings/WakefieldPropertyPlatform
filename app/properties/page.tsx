@@ -1,71 +1,91 @@
 import PropertyCard from "@/components/property/PropertyCard";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
+
+type Property = {
+  id: string;
+  title: string;
+  description?: string | null;
+  price: number;
+  location?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postcode?: string | null;
+  property_type?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  furnished?: boolean | null;
+  bills_included?: boolean | null;
+  available_from?: string | null;
+  deposit?: string | number | null;
+  parking?: boolean | null;
+  garden?: boolean | null;
+  pet_friendly?: boolean | null;
+  image?: string | null;
+};
+
 export default async function PropertiesPage() {
-  const { data: properties, error } = await supabase
-  .from("properties")
-  .select("*")
-  .order("created_at", { ascending: false });
+  const supabase = await createClient();
 
-if (error) {
-  console.error(error);
-}
+  const { data, error } = await supabase
+    .from("properties")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error("Properties page error:", error);
+  }
+
+  const properties = (data as Property[] | null) ?? [];
+
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-[#f7f8fb] px-5 pb-20 pt-32 sm:px-8">
+      <section className="mx-auto max-w-[1220px]">
+        <div className="mb-12">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d99a2f]">
+            Available homes
+          </p>
 
-      {/* Hero */}
-      <section className="bg-[#0B1F3A] py-16 text-white">
-
-        <div className="mx-auto max-w-7xl px-6">
-
-          <h1 className="text-5xl font-bold">
-            Available Properties
+          <h1 className="mt-3 font-serif text-4xl font-bold text-[#071b3a] sm:text-5xl">
+            Properties
           </h1>
 
-          <p className="mt-4 max-w-2xl text-lg text-gray-300">
-            Browse our latest rooms, flats and houses available to rent in
-            Wakefield and surrounding areas.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            Browse available rental properties across Wakefield and the
+            surrounding areas.
           </p>
-
         </div>
 
+        {error ? (
+          <div className="rounded-3xl border border-red-200 bg-red-50 px-6 py-12 text-center">
+            <h2 className="text-xl font-bold text-red-800">
+              Properties could not be loaded
+            </h2>
+
+            <p className="mt-3 text-red-700">
+              Please refresh the page or try again later.
+            </p>
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+            <h2 className="font-serif text-2xl font-bold text-[#071b3a]">
+              No properties available
+            </h2>
+
+            <p className="mt-3 text-slate-600">
+              New properties will be added soon.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+            {properties.map((property) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+              />
+            ))}
+          </div>
+        )}
       </section>
-
-      {/* Search Box (Coming Next) */}
-      <section className="mx-auto max-w-7xl px-6 py-10">
-
-        <div className="rounded-3xl bg-white p-6 shadow-lg">
-
-          <h2 className="text-2xl font-bold text-[#0B1F3A]">
-            Find Your Next Home
-          </h2>
-
-          <p className="mt-2 text-gray-500">
-            Search by property type, bedrooms and budget.
-          </p>
-
-        </div>
-
-      </section>
-
-      {/* Property Grid */}
-
-      <section className="mx-auto max-w-7xl px-6 pb-20">
-
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-
-          {properties?.map((property) => (
-
-  <PropertyCard
-    key={property.id}
-    property={property}
-  />
-
-))}
-
-        </div>
-
-      </section>
-
     </main>
   );
 }

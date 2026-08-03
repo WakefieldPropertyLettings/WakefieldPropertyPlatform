@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import PropertyGallery from "@/components/property/PropertyGallery";
+import JasmineAssistant from "@/components/property/JasmineAssistant";
 
 type Props = {
   params: Promise<{
@@ -208,15 +209,14 @@ Available From
               </p>
 
               <Link
-                href="/eligibility"
-                className="mt-8 block w-full rounded-xl bg-[#D4AF37] py-4 text-center font-bold text-[#0B1F3A] hover:opacity-90"
-              >
-                Book Viewing
-              </Link>
+  href="/eligibility"
+  onClick={() => setMobileMenuOpen(false)}
+  className="mt-3 rounded-xl bg-[#efad3f] px-5 py-3.5 text-center text-sm font-semibold text-[#071b3a]"
+>
+  Book viewing
+</Link>
 
-              <button className="mt-4 w-full rounded-xl border-2 border-[#0B1F3A] py-4 font-bold text-[#0B1F3A] hover:bg-[#0B1F3A] hover:text-white">
-                Ask a Question
-              </button>
+              <JasmineAssistant property={property} />
 
               <div className="mt-8 rounded-xl bg-gray-100 p-5">
                 <h3 className="font-bold">
