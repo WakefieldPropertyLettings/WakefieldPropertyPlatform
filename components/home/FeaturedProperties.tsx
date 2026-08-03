@@ -30,31 +30,47 @@ type Property = {
   image?: string | null;
 };
 
+/*
+  Create the browser Supabase client once.
+  This file is a Client Component because it starts with "use client".
+*/
+const supabase = createClient();
+
 export default function FeaturedProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function fetchFeaturedProperties() {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .limit(3);
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        console.error("Featured properties error:", error);
+        setProperties([]);
+      } else {
+        setProperties((data as Property[]) ?? []);
+      }
+
+      setLoading(false);
+    }
+
     fetchFeaturedProperties();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  async function fetchFeaturedProperties() {
-  setLoading(true);
-
-  const { data, error } = await supabase
-    .from("properties")
-    .select("*")
-    .limit(3);
-
-  if (error) {
-    console.error("Featured properties error:", error);
-    setProperties([]);
-  } else {
-    setProperties(data || []);
-  }
-
-  setLoading(false);
-}
 
   return (
     <section className="bg-white px-5 py-24 sm:px-8">
