@@ -1,177 +1,202 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import ProgressBar from "./components/ProgressBar";
 import QuestionCard from "./components/QuestionCard";
 import { questions } from "./components/questions";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-
-const supabase = createClient();
 
 export default function EligibilityPage() {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const question = questions[step];
-  console.log(questions);
 
   function updateAnswer(value: string) {
-    setAnswers((prev) => ({
-      ...prev,
+    setErrorMessage("");
+
+    setAnswers((previousAnswers) => ({
+      ...previousAnswers,
       [question.key]: value,
     }));
+  }
+
+  async function submitEligibility() {
+    if (submitting) {
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const submission = {
+        enquiry_for: answers.enquiryFor || null,
+        other_person: answers.otherPerson || null,
+        living_with: answers.livingWith || null,
+
+        employment: answers.employment || null,
+        payslips: answers.payslips || null,
+        bank_statements: answers.bankStatements || null,
+
+        current_address: answers.currentAddress || null,
+        landlord_reference: answers.landlordReference || null,
+
+        property_type: answers.propertyType || null,
+        bedrooms: answers.bedrooms || null,
+        budget: answers.budget || null,
+        move_date: answers.moveDate || null,
+
+        benefits: answers.benefits || null,
+        benefit_type: answers.benefitType || null,
+
+        immigration_status: answers.immigrationStatus || null,
+
+        full_name: answers.fullName?.trim() || null,
+        phone: answers.phone?.trim() || null,
+        email: answers.email?.trim().toLowerCase() || null,
+      };
+
+      const { error } = await supabase
+        .from("enquiries")
+        .insert(submission);
+
+      if (error) {
+        console.error("Eligibility submission error:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+
+        throw new Error(
+          error.message || "Your eligibility form could not be submitted."
+        );
+      }
+
+      router.push("/eligibility/success");
+      router.refresh();
+    } catch (error) {
+      console.error("Eligibility form error:", error);
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while submitting your information."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function nextStep() {
     const currentQuestion = questions[step];
     const answer = answers[currentQuestion.key];
 
-    // -----------------------------
-    // Question 1
-    // -----------------------------
+    if (!answer?.trim()) {
+      setErrorMessage("Please answer this question before continuing.");
+      return;
+    }
+
+    setErrorMessage("");
+
     if (currentQuestion.key === "enquiryFor") {
+      if (answer === "Yes") {
+        setStep(1);
+        return;
+      }
 
-  console.log("Answer =", answer);
+      if (answer === "No") {
+        setStep(2);
+        return;
+      }
+    }
 
-  if (answer === "Yes") {
-    console.log("Going to Living With");
-    setStep(1);
-    return;
-  }
-
-  if (answer === "No") {
-    console.log("Going to Other Person");
-    setStep(2);
-    return;
-  }
-}
-
-    // -----------------------------
-    // After Living With OR Other Person
-    // -----------------------------
     if (
       currentQuestion.key === "livingWith" ||
       currentQuestion.key === "otherPerson"
     ) {
-      setStep(3); // Employment
+      setStep(3);
       return;
     }
 
-    // -----------------------------
-    // Employment Logic
-    // -----------------------------
     if (currentQuestion.key === "employment") {
       if (
         answer === "Student" ||
         answer === "Retired" ||
         answer === "Currently Not Working"
       ) {
-        // Skip Payslips & Bank Statements
         setStep(6);
         return;
       }
     }
 
-    // -----------------------------
-    // Benefits Logic
-    // -----------------------------
-    if (currentQuestion.key === "benefits") {
-      if (answer === "No") {
-        // Skip Benefit Type
-        setStep(step + 2);
-        return;
-      }
+    if (currentQuestion.key === "benefits" && answer === "No") {
+      setStep((currentStep) =>
+        Math.min(currentStep + 2, questions.length - 1)
+      );
+      return;
     }
 
-    // -----------------------------
-    // Normal Next
-    // -----------------------------
     if (step < questions.length - 1) {
-      setStep(step + 1);
+      setStep((currentStep) => currentStep + 1);
       return;
     }
 
-    // -----------------------------
-    // Save to Supabase
-    // -----------------------------
-    const { error } = await supabase
-      .from("enquiries")
-      .insert([
-  {
-    enquiry_for: answers.enquiryFor,
-    other_person: answers.otherPerson,
-    living_with: answers.livingWith,
-
-    employment: answers.employment,
-    payslips: answers.payslips,
-    bank_statements: answers.bankStatements,
-
-    current_address: answers.currentAddress,
-    landlord_reference: answers.landlordReference,
-
-    property_type: answers.propertyType,
-    bedrooms: answers.bedrooms,
-    budget: answers.budget,
-    move_date: answers.moveDate,
-
-    benefits: answers.benefits,
-    benefit_type: answers.benefitType,
-
-    immigration_status: answers.immigrationStatus,
-
-    full_name: answers.fullName,
-    phone: answers.phone,
-    email: answers.email,
-  },
-]);
-
-    if (error) {
-      console.error(error);
-      alert("Something went wrong.");
-      return;
-    }
-
-    router.push("/eligibility/success");
+    await submitEligibility();
   }
 
   function previousStep() {
-  const currentQuestion = questions[step];
+    const currentQuestion = questions[step];
 
-  // If we're on either follow-up question,
-  // go back to the first question.
-  if (
-    currentQuestion.key === "livingWith" ||
-    currentQuestion.key === "otherPerson"
-  ) {
-    setStep(0);
-    return;
-  }
+    setErrorMessage("");
 
-  // If we're on Employment,
-  // go back to whichever follow-up question the user answered.
-  if (currentQuestion.key === "employment") {
-    if (answers.enquiryFor === "Yes") {
-      setStep(1);
-    } else {
-      setStep(2);
+    if (
+      currentQuestion.key === "livingWith" ||
+      currentQuestion.key === "otherPerson"
+    ) {
+      setStep(0);
+      return;
     }
-    return;
+
+    if (currentQuestion.key === "employment") {
+      setStep(answers.enquiryFor === "Yes" ? 1 : 2);
+      return;
+    }
+
+    if (step > 0) {
+      setStep((currentStep) => currentStep - 1);
+    }
   }
 
-  // Default behaviour
-  if (step > 0) {
-    setStep(step - 1);
+  if (!question) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-100 px-6">
+        <div className="rounded-2xl bg-white p-8 text-center shadow">
+          <h1 className="text-2xl font-bold text-[#0B1F3A]">
+            Eligibility form unavailable
+          </h1>
+
+          <p className="mt-3 text-gray-600">
+            Please refresh the page and try again.
+          </p>
+        </div>
+      </main>
+    );
   }
-}
 
   return (
     <main className="min-h-screen bg-gray-100">
       <section className="bg-[#0B1F3A] py-16 text-white">
         <div className="mx-auto max-w-4xl px-6">
-          <h1 className="text-5xl font-bold">
+          <h1 className="text-4xl font-bold sm:text-5xl">
             Quick Eligibility Check
           </h1>
 
@@ -188,6 +213,15 @@ export default function EligibilityPage() {
           total={questions.length}
         />
 
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm leading-6 text-red-700"
+          >
+            {errorMessage}
+          </div>
+        )}
+
         <QuestionCard
           title={question.title}
           value={answers[question.key] || ""}
@@ -196,20 +230,27 @@ export default function EligibilityPage() {
           onChange={updateAnswer}
         />
 
-        <div className="mt-10 flex justify-between">
+        <div className="mt-10 flex flex-col-reverse gap-4 sm:flex-row sm:justify-between">
           <button
+            type="button"
             onClick={previousStep}
-            disabled={step === 0}
-            className="rounded-2xl border-2 border-gray-300 bg-white px-10 py-4 font-bold disabled:opacity-40"
+            disabled={step === 0 || submitting}
+            className="rounded-2xl border-2 border-gray-300 bg-white px-10 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-40"
           >
             Previous
           </button>
 
           <button
-            onClick={nextStep}
-            className="rounded-2xl bg-[#D4AF37] px-10 py-4 font-bold text-[#0B1F3A] hover:opacity-90"
+            type="button"
+            onClick={() => void nextStep()}
+            disabled={submitting}
+            className="rounded-2xl bg-[#D4AF37] px-10 py-4 font-bold text-[#0B1F3A] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {step === questions.length - 1 ? "Finish" : "Next"}
+            {submitting
+              ? "Submitting..."
+              : step === questions.length - 1
+                ? "Finish"
+                : "Next"}
           </button>
         </div>
       </section>
