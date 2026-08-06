@@ -606,6 +606,7 @@ export default function AddPropertyPage() {
                 <option value="Studio">Studio</option>
                 <option value="Room">Room</option>
                 <option value="Bungalow">Bungalow</option>
+                <option value="Ensuite">Flat</option>
               </select>
             </div>
 

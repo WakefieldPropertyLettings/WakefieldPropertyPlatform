@@ -895,6 +895,7 @@ export default function EditPropertyPage() {
                 <option value="Studio">Studio</option>
                 <option value="Room">Room</option>
                 <option value="Bungalow">Bungalow</option>
+                <option value="Ensuite">Ensuite</option>
               </select>
             </div>
 
