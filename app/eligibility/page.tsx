@@ -6,12 +6,9 @@ import { useRouter } from "next/navigation";
 import ProgressBar from "./components/ProgressBar";
 import QuestionCard from "./components/QuestionCard";
 import { questions } from "./components/questions";
-import { createClient } from "@/lib/supabase/client";
 
 export default function EligibilityPage() {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
-
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -64,25 +61,39 @@ export default function EligibilityPage() {
         email: answers.email?.trim().toLowerCase() || null,
       };
 
-      const { error } = await supabase
-        .from("enquiries")
-        .insert(submission);
+     const response = await fetch("/api/eligibility", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(answers),
+});
 
-      if (error) {
-        console.error("Eligibility submission error:", {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-        });
+const responseText = await response.text();
 
-        throw new Error(
-          error.message || "Your eligibility form could not be submitted."
-        );
-      }
+let result: {
+  success?: boolean;
+  error?: string;
+  leadId?: number;
+};
 
-      router.push("/eligibility/success");
-      router.refresh();
+try {
+  result = JSON.parse(responseText);
+} catch {
+  alert(
+    `The server returned an invalid response. Status: ${response.status}`
+  );
+  return;
+}
+
+if (!response.ok) {
+  console.error("Eligibility API error:", result);
+  alert(result.error || "The form could not be submitted.");
+  return;
+}
+
+router.push("/eligibility/success");
+router.refresh();
     } catch (error) {
       console.error("Eligibility form error:", error);
 
