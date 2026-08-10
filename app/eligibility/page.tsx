@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import ProgressBar from "./components/ProgressBar";
@@ -9,6 +9,7 @@ import { questions } from "./components/questions";
 
 export default function EligibilityPage() {
   const router = useRouter();
+
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -34,66 +35,44 @@ export default function EligibilityPage() {
     setErrorMessage("");
 
     try {
-      const submission = {
-        enquiry_for: answers.enquiryFor || null,
-        other_person: answers.otherPerson || null,
-        living_with: answers.livingWith || null,
+      const response = await fetch("/api/eligibility", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(answers),
+      });
 
-        employment: answers.employment || null,
-        payslips: answers.payslips || null,
-        bank_statements: answers.bankStatements || null,
+      const responseText = await response.text();
 
-        current_address: answers.currentAddress || null,
-        landlord_reference: answers.landlordReference || null,
-
-        property_type: answers.propertyType || null,
-        bedrooms: answers.bedrooms || null,
-        budget: answers.budget || null,
-        move_date: answers.moveDate || null,
-
-        benefits: answers.benefits || null,
-        benefit_type: answers.benefitType || null,
-
-        immigration_status: answers.immigrationStatus || null,
-
-        full_name: answers.fullName?.trim() || null,
-        phone: answers.phone?.trim() || null,
-        email: answers.email?.trim().toLowerCase() || null,
+      let result: {
+        success?: boolean;
+        error?: string;
+        warning?: string;
+        enquiryId?: number;
+        emailSent?: boolean;
       };
 
-     const response = await fetch("/api/eligibility", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify(answers),
-});
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        throw new Error(
+          `The server returned an invalid response. Status: ${response.status}`
+        );
+      }
 
-const responseText = await response.text();
+      if (!response.ok) {
+        throw new Error(
+          result.error || "The eligibility form could not be submitted."
+        );
+      }
 
-let result: {
-  success?: boolean;
-  error?: string;
-  leadId?: number;
-};
+      if (result.warning) {
+        console.warn(result.warning);
+      }
 
-try {
-  result = JSON.parse(responseText);
-} catch {
-  alert(
-    `The server returned an invalid response. Status: ${response.status}`
-  );
-  return;
-}
-
-if (!response.ok) {
-  console.error("Eligibility API error:", result);
-  alert(result.error || "The form could not be submitted.");
-  return;
-}
-
-router.push("/eligibility/success");
-router.refresh();
+      router.push("/eligibility/success");
+      router.refresh();
     } catch (error) {
       console.error("Eligibility form error:", error);
 
@@ -109,15 +88,23 @@ router.refresh();
 
   async function nextStep() {
     const currentQuestion = questions[step];
+
+    if (!currentQuestion) {
+      return;
+    }
+
     const answer = answers[currentQuestion.key];
 
     if (!answer?.trim()) {
-      setErrorMessage("Please answer this question before continuing.");
+      setErrorMessage(
+        "Please answer this question before continuing."
+      );
       return;
     }
 
     setErrorMessage("");
 
+    // First question
     if (currentQuestion.key === "enquiryFor") {
       if (answer === "Yes") {
         setStep(1);
@@ -130,6 +117,7 @@ router.refresh();
       }
     }
 
+    // Living With / Other Person
     if (
       currentQuestion.key === "livingWith" ||
       currentQuestion.key === "otherPerson"
@@ -138,6 +126,7 @@ router.refresh();
       return;
     }
 
+    // Employment
     if (currentQuestion.key === "employment") {
       if (
         answer === "Student" ||
@@ -149,23 +138,33 @@ router.refresh();
       }
     }
 
-    if (currentQuestion.key === "benefits" && answer === "No") {
+    // Benefits
+    if (
+      currentQuestion.key === "benefits" &&
+      answer === "No"
+    ) {
       setStep((currentStep) =>
         Math.min(currentStep + 2, questions.length - 1)
       );
       return;
     }
 
+    // Normal next question
     if (step < questions.length - 1) {
       setStep((currentStep) => currentStep + 1);
       return;
     }
 
+    // Final question
     await submitEligibility();
   }
 
   function previousStep() {
     const currentQuestion = questions[step];
+
+    if (!currentQuestion) {
+      return;
+    }
 
     setErrorMessage("");
 
@@ -189,9 +188,9 @@ router.refresh();
 
   if (!question) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-100 px-6">
-        <div className="rounded-2xl bg-white p-8 text-center shadow">
-          <h1 className="text-2xl font-bold text-[#0B1F3A]">
+      <main className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-3xl px-6 py-20">
+          <h1 className="text-3xl font-bold text-[#0B1F3A]">
             Eligibility form unavailable
           </h1>
 
@@ -207,13 +206,13 @@ router.refresh();
     <main className="min-h-screen bg-gray-100">
       <section className="bg-[#0B1F3A] py-16 text-white">
         <div className="mx-auto max-w-4xl px-6">
-          <h1 className="text-4xl font-bold sm:text-5xl">
+          <h1 className="text-5xl font-bold">
             Quick Eligibility Check
           </h1>
 
           <p className="mt-4 text-lg text-gray-300">
-            This helps us understand your requirements before arranging a
-            property viewing.
+            This helps us understand your requirements before
+            arranging a property viewing.
           </p>
         </div>
       </section>

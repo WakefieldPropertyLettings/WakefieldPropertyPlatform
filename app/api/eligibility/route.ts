@@ -1,34 +1,21 @@
 import { NextResponse } from "next/server";
-
-type TenNinetyResponse = {
-  IsSuccessful?: boolean;
-  ErrorMessage?: string | null;
-  Name?: string;
-  Id?: number;
-};
+import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 
 export async function POST(request: Request) {
   try {
     const submission = await request.json();
 
-    const apiKey = process.env.TENNINETY_API_KEY;
-    const apiUrl = process.env.TENNINETY_API_URL;
-
-    if (!apiKey || !apiUrl) {
-      return NextResponse.json(
-        {
-          error: "10ninety environment variables are missing.",
-        },
-        {
-          status: 500,
-        }
-      );
-    }
+    // --------------------------------
+    // Validate required information
+    // --------------------------------
 
     const fullName = String(submission.fullName || "").trim();
+
     const email = String(submission.email || "")
       .trim()
       .toLowerCase();
+
     const phone = String(submission.phone || "").trim();
 
     if (!fullName || !email || !phone) {
@@ -36,147 +23,317 @@ export async function POST(request: Request) {
         {
           error: "Full name, email and phone number are required.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    const additionalInfo = [
-      `Enquiry for: ${submission.enquiryFor || "Not provided"}`,
-      `Living with: ${submission.livingWith || "Not provided"}`,
-      `Other person: ${submission.otherPerson || "Not provided"}`,
-      `Employment: ${submission.employment || "Not provided"}`,
-      `Payslips: ${submission.payslips || "Not provided"}`,
-      `Bank statements: ${submission.bankStatements || "Not provided"}`,
-      `Current address: ${submission.currentAddress || "Not provided"}`,
-      `Landlord reference: ${
-        submission.landlordReference || "Not provided"
-      }`,
-      `Property type: ${submission.propertyType || "Not provided"}`,
-      `Bedrooms: ${submission.bedrooms || "Not provided"}`,
-      `Budget: ${submission.budget || "Not provided"}`,
-      `Move date: ${submission.moveDate || "Not provided"}`,
-      `Benefits: ${submission.benefits || "Not provided"}`,
-      `Benefit type: ${submission.benefitType || "Not provided"}`,
-      `Immigration status: ${
-        submission.immigrationStatus || "Not provided"
-      }`,
-    ].join("\n");
+    // --------------------------------
+    // Supabase
+    // --------------------------------
 
-    const budgetNumber = Number(
-      String(submission.budget || "").replace(/[^\d.]/g, "")
-    );
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-    const bedroomNumber = Number(
-      String(submission.bedrooms || "").replace(/[^\d]/g, "")
-    );
+    const serviceRoleKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    const payload: Record<string, unknown> = {
-      BranchName: "Head Office",
-      ContactRoleType: "Tenant",
-      Name: fullName,
-      Email: email,
-      MobilePhoneNumber: phone,
-      Comments:
-        "Eligibility form submitted through the Wakefield Property Lettings website.",
-      AdditionalInfo: additionalInfo,
-      EmploymentStatusString:
-        submission.employment || undefined,
-      RightToRentNotes:
-        submission.immigrationStatus || undefined,
-      RegistrationComplete: false,
-    };
-
-    if (Number.isFinite(budgetNumber) && budgetNumber > 0) {
-      payload.MaxPrice = budgetNumber;
-    }
-
-    if (Number.isInteger(bedroomNumber) && bedroomNumber > 0) {
-      payload.BedsEqual = bedroomNumber;
-    }
-
-    if (submission.propertyType) {
-      payload.PropTypeNames = [submission.propertyType];
-    }
-
-    const cleanPayload = Object.fromEntries(
-      Object.entries(payload).filter(
-        ([, value]) => value !== undefined
-      )
-    );
-
-    const crmResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "10ninety.OpenApi.Key": apiKey,
-      },
-      body: JSON.stringify(cleanPayload),
-      cache: "no-store",
-    });
-
-    const responseText = await crmResponse.text();
-
-    let crmResult: TenNinetyResponse;
-
-    try {
-      crmResult = JSON.parse(responseText);
-    } catch {
-      console.error("Invalid 10ninety response:", responseText);
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error("Missing Supabase environment variables.");
 
       return NextResponse.json(
         {
-          error: "10ninety returned an invalid response.",
+          error: "Database configuration is missing.",
         },
-        {
-          status: 502,
-        }
+        { status: 500 }
       );
     }
 
-    if (
-      !crmResponse.ok ||
-      crmResult.IsSuccessful === false
-    ) {
-      console.error("10ninety error:", crmResult);
+    const supabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    );
+
+    // --------------------------------
+    // Save eligibility form
+    // --------------------------------
+
+    const { data, error: databaseError } = await supabase
+      .from("enquiries")
+      .insert([
+        {
+          enquiry_for: submission.enquiryFor || null,
+
+          other_person: submission.otherPerson || null,
+
+          living_with: submission.livingWith || null,
+
+          employment: submission.employment || null,
+
+          payslips: submission.payslips || null,
+
+          bank_statements:
+            submission.bankStatements || null,
+
+          current_address:
+            submission.currentAddress || null,
+
+          landlord_reference:
+            submission.landlordReference || null,
+
+          property_type:
+            submission.propertyType || null,
+
+          bedrooms: submission.bedrooms || null,
+
+          budget: submission.budget || null,
+
+          move_date: submission.moveDate || null,
+
+          benefits: submission.benefits || null,
+
+          benefit_type:
+            submission.benefitType || null,
+
+          immigration_status:
+            submission.immigrationStatus || null,
+
+          full_name: fullName,
+
+          phone: phone,
+
+          email: email,
+        },
+      ])
+      .select("id")
+      .single();
+
+    if (databaseError) {
+      console.error(
+        "Supabase eligibility error:",
+        databaseError
+      );
 
       return NextResponse.json(
         {
-          error:
-            crmResult.ErrorMessage ||
-            "The lead could not be created in 10ninety.",
+          error: databaseError.message,
         },
-        {
-          status: 502,
-        }
+        { status: 500 }
       );
     }
+
+    // --------------------------------
+    // Email notification
+    // --------------------------------
+
+    const resendApiKey =
+      process.env.RESEND_API_KEY;
+
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY is missing.");
+
+      // IMPORTANT:
+      // The enquiry is already saved.
+      // We don't want the applicant submitting again.
+      return NextResponse.json(
+        {
+          success: true,
+          enquiryId: data.id,
+          emailSent: false,
+          warning:
+            "Enquiry saved successfully but email notification is not configured.",
+        },
+        { status: 201 }
+      );
+    }
+
+    const resend = new Resend(resendApiKey);
+
+    const { error: emailError } =
+      await resend.emails.send({
+        from:
+          process.env.ELIGIBILITY_FROM_EMAIL ||
+          "Wakefield Property Lettings <onboarding@resend.dev>",
+
+        to: [
+          process.env.ELIGIBILITY_NOTIFICATION_EMAIL ||
+            "admin@wakefieldpropertylettings.co.uk",
+        ],
+
+        replyTo: email,
+
+        subject: `New Eligibility Submission - ${fullName}`,
+
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;color:#1e293b;">
+
+            <div style="background:#0B1F3A;padding:25px;border-radius:12px 12px 0 0;">
+              <h1 style="color:white;margin:0;">
+                New Eligibility Submission
+              </h1>
+            </div>
+
+            <div style="padding:25px;border:1px solid #e5e7eb;">
+
+              <h2 style="color:#0B1F3A;">
+                Applicant Details
+              </h2>
+
+              <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
+
+              <p>
+                <strong>Email:</strong>
+                ${escapeHtml(email)}
+              </p>
+
+              <p>
+                <strong>Phone:</strong>
+                ${escapeHtml(phone)}
+              </p>
+
+              <hr style="margin:25px 0;border:none;border-top:1px solid #ddd;" />
+
+              <h2 style="color:#0B1F3A;">
+                Eligibility Information
+              </h2>
+
+              ${row("Enquiry For", submission.enquiryFor)}
+
+              ${row("Living With", submission.livingWith)}
+
+              ${row("Other Person", submission.otherPerson)}
+
+              ${row("Employment", submission.employment)}
+
+              ${row("Payslips", submission.payslips)}
+
+              ${row(
+                "Bank Statements",
+                submission.bankStatements
+              )}
+
+              ${row(
+                "Current Address",
+                submission.currentAddress
+              )}
+
+              ${row(
+                "Landlord Reference",
+                submission.landlordReference
+              )}
+
+              ${row(
+                "Property Type",
+                submission.propertyType
+              )}
+
+              ${row("Bedrooms", submission.bedrooms)}
+
+              ${row("Budget", submission.budget)}
+
+              ${row("Move Date", submission.moveDate)}
+
+              ${row("Benefits", submission.benefits)}
+
+              ${row(
+                "Benefit Type",
+                submission.benefitType
+              )}
+
+              ${row(
+                "Immigration Status",
+                submission.immigrationStatus
+              )}
+
+              <hr style="margin:25px 0;border:none;border-top:1px solid #ddd;" />
+
+              <p style="color:#64748b;font-size:13px;">
+                Submitted through
+                Wakefield Property Lettings website.
+              </p>
+
+              <p style="color:#64748b;font-size:13px;">
+                Enquiry Reference: WPL-E-${data.id}
+              </p>
+
+            </div>
+
+          </div>
+        `,
+      });
+
+    if (emailError) {
+      console.error(
+        "Eligibility notification email error:",
+        emailError
+      );
+
+      // Again: enquiry is already safely stored.
+      return NextResponse.json(
+        {
+          success: true,
+          enquiryId: data.id,
+          emailSent: false,
+          warning:
+            "Eligibility saved successfully, but notification email failed.",
+        },
+        { status: 201 }
+      );
+    }
+
+    // --------------------------------
+    // Everything successful
+    // --------------------------------
 
     return NextResponse.json(
       {
         success: true,
-        leadId: crmResult.Id,
-        leadName: crmResult.Name,
+        enquiryId: data.id,
+        emailSent: true,
       },
-      {
-        status: 201,
-      }
+      { status: 201 }
     );
   } catch (error) {
-    console.error("Eligibility API error:", error);
+    console.error(
+      "Eligibility API error:",
+      error
+    );
 
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "The eligibility submission failed.",
+            : "Eligibility submission failed.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
+}
+
+// --------------------------------
+// Email helper
+// --------------------------------
+
+function row(label: string, value?: string) {
+  return `
+    <p>
+      <strong>${escapeHtml(label)}:</strong>
+      ${escapeHtml(value || "Not provided")}
+    </p>
+  `;
+}
+
+function escapeHtml(value: string) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }

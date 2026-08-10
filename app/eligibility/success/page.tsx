@@ -2,10 +2,8 @@ import Link from "next/link";
 
 export default function EligibilitySuccessPage() {
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center px-6">
-
-      <div className="max-w-2xl rounded-3xl bg-white p-12 shadow-xl text-center">
-
+    <main className="flex min-h-screen items-center justify-center bg-gray-100 px-6 py-16">
+      <div className="w-full max-w-2xl rounded-3xl bg-white p-10 text-center shadow-xl sm:p-12">
         <div className="text-7xl">
           ✅
         </div>
@@ -19,18 +17,31 @@ export default function EligibilitySuccessPage() {
         </p>
 
         <p className="mt-4 text-lg leading-8 text-gray-600">
-          One of our property consultants will review your information and contact you shortly to arrange the next steps.
+          One of our property consultants will review your information and
+          contact you shortly regarding the next steps.
         </p>
 
-        <Link
-          href="/"
-          className="mt-10 inline-block rounded-xl bg-[#D4AF37] px-8 py-4 font-bold text-[#0B1F3A] hover:opacity-90"
-        >
-          Return to Homepage
-        </Link>
+        <div className="mt-8 rounded-2xl bg-[#f8fafc] p-5 text-sm leading-6 text-gray-600">
+          Please keep an eye on your email and phone for any updates from
+          Wakefield Property Lettings.
+        </div>
 
+        <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/properties"
+            className="rounded-xl bg-[#D4AF37] px-8 py-4 font-bold text-[#0B1F3A] transition hover:opacity-90"
+          >
+            View Properties
+          </Link>
+
+          <Link
+            href="/"
+            className="rounded-xl border-2 border-[#0B1F3A] px-8 py-4 font-bold text-[#0B1F3A] transition hover:bg-[#0B1F3A] hover:text-white"
+          >
+            Return to Homepage
+          </Link>
+        </div>
       </div>
-
     </main>
   );
 }
