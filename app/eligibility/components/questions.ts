@@ -70,7 +70,8 @@ export const questions = [
 
   {
     key: "landlordReference",
-    title: "Can you provide a reference from your current or previous landlord if requested?",
+    title:
+      "Can you provide a reference from your current or previous landlord if requested?",
     options: [
       "Yes",
       "No",
@@ -90,6 +91,18 @@ export const questions = [
     ],
   },
 
+  {
+    key: "bedrooms",
+    title: "How many bedrooms do you require?",
+    options: [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5+",
+      "No Preference",
+    ],
+  },
 
   {
     key: "budget",
@@ -121,7 +134,8 @@ export const questions = [
 
   {
     key: "immigrationStatus",
-    title: "Will you be able to complete the required UK Right to Rent checks before moving into a property?",
+    title:
+      "Will you be able to complete the required UK Right to Rent checks before moving into a property?",
     options: [
       "Yes",
       "No",
