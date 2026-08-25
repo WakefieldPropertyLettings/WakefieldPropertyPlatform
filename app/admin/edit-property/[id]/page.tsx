@@ -47,7 +47,9 @@ export default function EditPropertyPage() {
   const [price, setPrice] = useState("");
   const [deposit, setDeposit] = useState("");
   const [availableFrom, setAvailableFrom] = useState("");
+  
   const [propertyType, setPropertyType] = useState("House");
+  const [propertyStatus, setPropertyStatus] = useState("available");
 
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
@@ -139,7 +141,8 @@ export default function EditPropertyPage() {
       );
 
       setAvailableFrom(property.available_from ?? "");
-      setPropertyType(property.property_type ?? "House");
+      
+      setPropertyStatus(property.status ?? "available");
 
       setBedrooms(
         property.bedrooms !== null && property.bedrooms !== undefined
@@ -610,7 +613,7 @@ export default function EditPropertyPage() {
           deposit: deposit.trim(),
           available_from: availableFrom || null,
           property_type: propertyType,
-
+          status: propertyStatus,
           bedrooms: bedrooms ? Number(bedrooms) : 0,
           bathrooms: bathrooms ? Number(bathrooms) : 0,
           area: area.trim(),
@@ -872,7 +875,7 @@ export default function EditPropertyPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
             <div>
               <label
                 htmlFor="property-type"
@@ -898,7 +901,35 @@ export default function EditPropertyPage() {
                 <option value="Ensuite">Ensuite</option>
               </select>
             </div>
+<div>
+  <label
+    htmlFor="property-status"
+    className="mb-2 block font-semibold"
+  >
+    Property Status
+  </label>
 
+  <select
+    id="property-status"
+    value={propertyStatus}
+    onChange={(event) =>
+      setPropertyStatus(event.target.value)
+    }
+    className="w-full rounded-lg border p-3"
+  >
+    <option value="available">
+      Available
+    </option>
+
+    <option value="reserved">
+      Reserved
+    </option>
+
+    <option value="let_agreed">
+      Let Agreed
+    </option>
+  </select>
+</div>
             <div>
               <label
                 htmlFor="bedrooms"

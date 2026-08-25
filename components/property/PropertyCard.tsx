@@ -22,6 +22,8 @@ type Property = {
   garden?: boolean | null;
   pet_friendly?: boolean | null;
   image?: string | null;
+
+  status?: string | null;
 };
 
 export default function PropertyCard({
@@ -58,6 +60,10 @@ export default function PropertyCard({
         : `£${property.deposit}`
       : null;
 
+  const status = property.status || "available";
+
+  const statusDetails = getStatusDetails(status);
+
   return (
     <article className="group h-full overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(7,27,58,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(7,27,58,0.14)]">
       <Link
@@ -72,9 +78,15 @@ export default function PropertyCard({
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#071b3a]/70 via-transparent to-transparent" />
 
-        <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[#071b3a] shadow-sm">
-          Available
+        {/* PROPERTY STATUS */}
+
+        <span
+          className={`absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow-sm ${statusDetails.className}`}
+        >
+          {statusDetails.label}
         </span>
+
+        {/* PROPERTY TYPE */}
 
         {property.property_type && (
           <span className="absolute right-4 top-4 rounded-full bg-[#efad3f] px-3 py-1.5 text-xs font-bold text-[#071b3a] shadow-sm">
@@ -136,21 +148,30 @@ export default function PropertyCard({
             <p className="text-lg font-bold text-[#071b3a]">
               {property.bedrooms ?? "—"}
             </p>
-            <p className="text-xs text-slate-500">Bedrooms</p>
+
+            <p className="text-xs text-slate-500">
+              Bedrooms
+            </p>
           </div>
 
           <div>
             <p className="text-lg font-bold text-[#071b3a]">
               {property.bathrooms ?? "—"}
             </p>
-            <p className="text-xs text-slate-500">Bathrooms</p>
+
+            <p className="text-xs text-slate-500">
+              Bathrooms
+            </p>
           </div>
 
           <div className="col-span-2 sm:col-span-1">
             <p className="text-sm font-bold text-[#071b3a]">
               {availableDate}
             </p>
-            <p className="text-xs text-slate-500">Available from</p>
+
+            <p className="text-xs text-slate-500">
+              Available from
+            </p>
           </div>
         </div>
 
@@ -200,11 +221,42 @@ export default function PropertyCard({
             href={`/properties/${property.id}`}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#102b55]"
           >
-            View property
-            <span aria-hidden="true">→</span>
+            {status === "available"
+              ? "View property"
+              : "View property details"}
+
+            <span aria-hidden="true">
+              →
+            </span>
           </Link>
         </div>
       </div>
     </article>
   );
+}
+
+function getStatusDetails(status: string) {
+  switch (status) {
+    case "reserved":
+      return {
+        label: "Reserved",
+        className:
+          "bg-amber-500 text-white",
+      };
+
+    case "let_agreed":
+      return {
+        label: "Let Agreed",
+        className:
+          "bg-[#071b3a] text-white",
+      };
+
+    case "available":
+    default:
+      return {
+        label: "Available",
+        className:
+          "bg-emerald-600 text-white",
+      };
+  }
 }
