@@ -61,6 +61,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+  url: `${baseUrl}/rooms-to-rent-wakefield`,
+  lastModified: new Date(),
+  changeFrequency: "daily",
+  priority: 0.9,
+},
+{
+  url: `${baseUrl}/ensuite-rooms-wakefield`,
+  lastModified: new Date(),
+  changeFrequency: "daily",
+  priority: 0.9,
+},
+{
+  url: `${baseUrl}/studios-to-rent-wakefield`,
+  lastModified: new Date(),
+  changeFrequency: "daily",
+  priority: 0.9,
+},
+{
+  url: `${baseUrl}/flats-to-rent-wakefield`,
+  lastModified: new Date(),
+  changeFrequency: "daily",
+  priority: 0.9,
+},
+{
+  url: `${baseUrl}/houses-to-rent-wakefield`,
+  lastModified: new Date(),
+  changeFrequency: "daily",
+  priority: 0.9,
+},
   ];
 
   try {

@@ -28,6 +28,57 @@ const MAX_IMAGES = 20;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const STORAGE_BUCKET = "property-images";
 
+const PROPERTY_TYPES = [
+  "room",
+  "ensuite",
+  "studio",
+  "flat",
+  "house",
+] as const;
+
+type PropertyType = (typeof PROPERTY_TYPES)[number];
+
+function normalisePropertyType(value: unknown): PropertyType | "" {
+  const normalised = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+
+  if (normalised === "room" || normalised === "rooms") {
+    return "room";
+  }
+
+  if (
+    normalised === "ensuite" ||
+    normalised === "en suite" ||
+    normalised === "ensuite room" ||
+    normalised === "en suite room"
+  ) {
+    return "ensuite";
+  }
+
+  if (normalised === "studio" || normalised === "studio flat") {
+    return "studio";
+  }
+
+  if (normalised === "flat" || normalised === "apartment") {
+    return "flat";
+  }
+
+  if (
+    normalised === "house" ||
+    normalised === "terraced house" ||
+    normalised === "semi detached house" ||
+    normalised === "detached house" ||
+    normalised === "bungalow"
+  ) {
+    return "house";
+  }
+
+  return "";
+}
+
 export default function EditPropertyPage() {
   const params = useParams();
   const router = useRouter();
@@ -48,7 +99,7 @@ export default function EditPropertyPage() {
   const [deposit, setDeposit] = useState("");
   const [availableFrom, setAvailableFrom] = useState("");
   
-  const [propertyType, setPropertyType] = useState("House");
+  const [propertyType, setPropertyType] = useState<PropertyType | "">("");
   const [propertyStatus, setPropertyStatus] = useState("available");
 
   const [bedrooms, setBedrooms] = useState("");
@@ -141,7 +192,17 @@ export default function EditPropertyPage() {
       );
 
       setAvailableFrom(property.available_from ?? "");
-      
+
+      const loadedPropertyType = normalisePropertyType(property.property_type);
+
+      if (!loadedPropertyType) {
+        console.warn(
+          "Unknown property type loaded from Supabase:",
+          property.property_type
+        );
+      }
+
+      setPropertyType(loadedPropertyType);
       setPropertyStatus(property.status ?? "available");
 
       setBedrooms(
@@ -592,13 +653,20 @@ export default function EditPropertyPage() {
         throw new Error("Please enter a valid monthly rent.");
       }
 
+      if (!propertyType || !PROPERTY_TYPES.includes(propertyType)) {
+        throw new Error("Please select a valid property type.");
+      }
+
       const newlyUploadedImages = await uploadNewImages();
 
       const allImages = [...existingImages, ...newlyUploadedImages];
 
       const coverImageUrl = allImages[0]?.image_url ?? "";
 
-      const { error: propertyError } = await supabase
+      const {
+        data: savedProperty,
+        error: propertyError,
+      } = await supabase
         .from("properties")
         .update({
           title: title.trim(),
@@ -627,11 +695,35 @@ export default function EditPropertyPage() {
           image: coverImageUrl,
           featured,
         })
-        .eq("id", propertyId);
+        .eq("id", propertyId)
+        .select("id, property_type, status")
+        .single();
 
-      if (propertyError) {
-        throw new Error(propertyError.message);
+      if (propertyError || !savedProperty) {
+        throw new Error(
+          propertyError?.message ||
+            "The property was updated but could not be verified."
+        );
       }
+
+      const verifiedPropertyType = normalisePropertyType(
+        savedProperty.property_type
+      );
+
+      if (verifiedPropertyType !== propertyType) {
+        throw new Error(
+          "Property type verification failed. Please refresh and try again."
+        );
+      }
+
+      if (savedProperty.status !== propertyStatus) {
+        throw new Error(
+          "Property status verification failed. Please refresh and try again."
+        );
+      }
+
+      setPropertyType(verifiedPropertyType);
+      setPropertyStatus(savedProperty.status);
 
       selectedImages.forEach((image) => {
         URL.revokeObjectURL(image.previewUrl);
@@ -888,17 +980,16 @@ export default function EditPropertyPage() {
                 id="property-type"
                 value={propertyType}
                 onChange={(event) =>
-                  setPropertyType(event.target.value)
+                  setPropertyType(event.target.value as PropertyType | "")
                 }
                 className="w-full rounded-lg border p-3"
               >
-                <option value="House">House</option>
-                <option value="Flat">Flat</option>
-                <option value="Apartment">Apartment</option>
-                <option value="Studio">Studio</option>
-                <option value="Room">Room</option>
-                <option value="Bungalow">Bungalow</option>
-                <option value="Ensuite">Ensuite</option>
+                <option value="">Select type</option>
+                <option value="room">Room</option>
+                <option value="ensuite">En-suite Room</option>
+                <option value="studio">Studio</option>
+                <option value="flat">Flat</option>
+                <option value="house">House</option>
               </select>
             </div>
 <div>
