@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   title: "Wakefield Property Lettings",
   description:
     "Professional property lettings services in Wakefield and surrounding areas.",
+
+  verification: {
+    google: "bE8MCU7_lpC6bTdEmZpWN2ATbqHMBBHztd9PswlhwHM",
+  },
 };
 
 export default function RootLayout({
@@ -22,7 +26,6 @@ export default function RootLayout({
       <body className="bg-white text-slate-900">
         <Navbar />
 
-        {/* Prevent content from being hidden behind the fixed navbar */}
         <main className="min-h-screen pt-[82px]">
           {children}
         </main>
@@ -33,6 +36,5 @@ export default function RootLayout({
         <CookieConsent />
       </body>
     </html>
-    
   );
 }

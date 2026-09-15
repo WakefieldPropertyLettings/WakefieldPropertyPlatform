@@ -10,6 +10,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import { compressPropertyImage } from "@/lib/images/compressPropertyImage";
 
 type ExistingImage = {
   id: number;
@@ -577,15 +578,22 @@ export default function EditPropertyPage() {
     }[] = [];
 
     for (let index = 0; index < selectedImages.length; index += 1) {
-      const selectedImage = selectedImages[index];
+     const selectedImage = selectedImages[index];
 
-      setStatusMessage(
-        `Uploading image ${index + 1} of ${selectedImages.length}...`
-      );
+setStatusMessage(
+  `Optimising image ${index + 1} of ${selectedImages.length}...`
+);
 
-      const safeFileName = sanitiseFileName(
-        selectedImage.file.name
-      );
+const compressedFile =
+  await compressPropertyImage(selectedImage.file);
+
+setStatusMessage(
+  `Uploading image ${index + 1} of ${selectedImages.length}...`
+);
+
+const safeFileName = sanitiseFileName(
+  compressedFile.name
+);
 
       const storagePath =
         `${propertyId}/` +
@@ -593,11 +601,11 @@ export default function EditPropertyPage() {
 
       const { error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
-        .upload(storagePath, selectedImage.file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: selectedImage.file.type,
-        });
+        .upload(storagePath, compressedFile, {
+  cacheControl: "31536000",
+  upsert: false,
+  contentType: compressedFile.type,
+});
 
       if (uploadError) {
         throw new Error(

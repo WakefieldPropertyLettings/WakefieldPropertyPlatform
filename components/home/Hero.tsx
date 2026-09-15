@@ -202,6 +202,7 @@ export default function Hero() {
             </p>
 
             <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-600">
+
               Properties let
             </p>
           </article>
