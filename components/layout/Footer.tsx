@@ -167,7 +167,7 @@ export default function Footer() {
 
               <div className="mt-6 flex gap-4">
                 <a
-                  href="YOUR_FACEBOOK_URL"
+                  href="https://www.facebook.com/profile.php?id=61593465660447"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Wakefield Property Lettings on Facebook"
@@ -177,7 +177,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="YOUR_INSTAGRAM_URL"
+                  href="https://www.instagram.com/wakefieldproperty/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Wakefield Property Lettings on Instagram"
@@ -187,7 +187,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="YOUR_LINKEDIN_URL"
+                  href="https://www.linkedin.com/company/wakefield-property-lettings"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Wakefield Property Lettings on LinkedIn"
