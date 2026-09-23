@@ -1,6 +1,24 @@
 import BookingForm from "@/components/bookings/BookingForm";
 
-export default function BookingPage() {
+type BookingPageProps = {
+  searchParams: Promise<{
+    propertyId?: string;
+  }>;
+};
+
+export default async function BookingPage({
+  searchParams,
+}: BookingPageProps) {
+  const params = await searchParams;
+
+  const parsedPropertyId = Number(params.propertyId);
+
+  const propertyId =
+    Number.isInteger(parsedPropertyId) &&
+    parsedPropertyId > 0
+      ? parsedPropertyId
+      : null;
+
   return (
     <main className="min-h-screen bg-gray-100 py-20">
       <div className="mx-auto max-w-3xl px-6">
@@ -8,7 +26,7 @@ export default function BookingPage() {
           Book a Viewing
         </h1>
 
-        <BookingForm />
+        <BookingForm propertyId={propertyId} />
       </div>
     </main>
   );

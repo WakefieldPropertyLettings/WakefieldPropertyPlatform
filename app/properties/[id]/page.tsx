@@ -706,19 +706,26 @@ export default async function PropertyDetailsPage({
                 requirements.
               </p>
 
-              <Link
-                href="/eligibility"
-                className="mt-7 block rounded-xl bg-[#D4AF37] px-6 py-4 text-center font-bold text-[#071b3a] transition hover:opacity-90"
-              >
-                Check Eligibility
-              </Link>
+             <Link
+  href={`/booking?propertyId=${property.id}`}
+  className="mt-7 block rounded-xl bg-[#D4AF37] px-6 py-4 text-center font-bold text-[#071b3a] transition hover:opacity-90"
+>
+  Book a Viewing
+</Link>
 
-              <Link
-                href="/contact"
-                className="mt-3 block rounded-xl border border-white/30 px-6 py-4 text-center font-bold text-white transition hover:bg-white/10"
-              >
-                Contact Us
-              </Link>
+<Link
+  href={`/eligibility?propertyId=${property.id}`}
+  className="mt-3 block rounded-xl border border-white/30 px-6 py-4 text-center font-bold text-white transition hover:bg-white/10"
+>
+  Check Eligibility
+</Link>
+
+<Link
+  href="/contact"
+  className="mt-3 block rounded-xl border border-white/30 px-6 py-4 text-center font-bold text-white transition hover:bg-white/10"
+>
+  Contact Us
+</Link>
 
               <div className="mt-8 border-t border-white/20 pt-7">
 

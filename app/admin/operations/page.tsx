@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import RejectApplicantButton from "./RejectApplicantButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ type Applicant = {
 };
 
 type Viewing = {
-  id: number;
+  id: string;
   property_id?: number | null;
   applicant_id?: number | null;
   viewing_date?: string | null;
@@ -539,23 +540,30 @@ export default async function OperationsPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+           <div className="flex flex-wrap gap-3">
 
-              <Link
-                href="/admin"
-                className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
-              >
-                Admin Home
-              </Link>
+  <Link
+    href="/admin/operations/add-viewing"
+    className="rounded-xl bg-[#efad3f] px-5 py-3 font-bold text-[#071b3a] transition hover:bg-[#f6bb54]"
+  >
+    + Add Viewing
+  </Link>
 
-              <Link
-                href="/properties"
-                className="rounded-xl bg-[#efad3f] px-5 py-3 font-bold text-[#071b3a]"
-              >
-                View Properties
-              </Link>
+  <Link
+    href="/admin"
+    className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
+  >
+    Admin Home
+  </Link>
 
-            </div>
+  <Link
+    href="/properties"
+    className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
+  >
+    View Properties
+  </Link>
+
+</div>
 
           </div>
 
@@ -746,15 +754,41 @@ export default async function OperationsPage() {
                           )}
                         </div>
 
-                        <div className="md:text-right">
-                          <Badge
-                            value={
-                              statusLabel(
-                                viewing.status
-                              )
-                            }
-                          />
-                        </div>
+                        <div className="flex flex-col items-start gap-3 md:items-end">
+  <Badge
+    value={
+      statusLabel(
+        viewing.status
+      )
+    }
+  />
+
+  {viewing.applicant_id &&
+  viewing.property_id &&
+  viewing.status !== "rejected" &&
+  viewing.status !== "completed" && (
+    <>
+      <Link
+        href={`/admin/operations/proceed-tenant?applicantId=${viewing.applicant_id}&propertyId=${viewing.property_id}&viewingId=${viewing.id}`}
+        className="inline-flex rounded-xl bg-[#071b3a] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#0d2b57]"
+      >
+        Proceed with Tenant
+      </Link>
+
+      <RejectApplicantButton
+        applicantId={
+          viewing.applicant_id
+        }
+        propertyId={
+          viewing.property_id
+        }
+        viewingId={
+          String(viewing.id)
+        }
+      />
+    </>
+  )}
+</div>
 
                       </div>
                     );
