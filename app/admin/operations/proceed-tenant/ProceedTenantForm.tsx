@@ -51,8 +51,8 @@ function numericValue(
   /*
    * Handles values such as:
    * 430
-   * Â£430
-   * Â£430.00
+   * £430
+   * £430.00
    * 430 pcm
    */
   const cleaned = value
@@ -67,11 +67,8 @@ function calculatePreview(
   moveDateValue: string,
   paymentDayValue: string
 ) {
-  const rent =
-    Number(rentValue);
-
-  const paymentDay =
-    Number(paymentDayValue);
+  const rent = Number(rentValue);
+  const paymentDay = Number(paymentDayValue);
 
   if (
     !Number.isFinite(rent) ||
@@ -82,81 +79,92 @@ function calculatePreview(
     return null;
   }
 
-  const moveDate =
-    new Date(
-      `${moveDateValue}T12:00:00`
-    );
+  const [
+    year,
+    month,
+    calendarDay,
+  ] = moveDateValue
+    .split("-")
+    .map(Number);
 
   if (
-    Number.isNaN(
-      moveDate.getTime()
-    )
+    !year ||
+    !month ||
+    !calendarDay
   ) {
     return null;
   }
 
-  const year =
-    moveDate.getFullYear();
+  // Every rental month is treated as 30 days.
+  const rentalDay =
+    Math.min(calendarDay, 30);
 
-  const month =
-    moveDate.getMonth();
+  const dailyRate =
+    rent / 30;
 
-  const day =
-    moveDate.getDate();
-
-  let nextPaymentDate: Date;
-
-  if (day < paymentDay) {
-    nextPaymentDate =
-      new Date(
-        year,
-        month,
-        paymentDay,
-        12
-      );
-  } else {
-    nextPaymentDate =
-      new Date(
-        year,
-        month + 1,
-        paymentDay,
-        12
-      );
+  // No pro-rata if moving in on the normal payment date.
+  if (calendarDay === paymentDay) {
+    return {
+      days: 0,
+      amount: 0,
+      nextPaymentDate: moveDateValue,
+    };
   }
 
-  const millisecondsPerDay =
-    1000 * 60 * 60 * 24;
+  let days = 0;
+  let nextYear = year;
+  let nextMonth = month;
 
-  const days =
+  if (paymentDay === 1) {
+    days =
+      31 - rentalDay;
+
+    nextMonth += 1;
+  } else {
+    if (rentalDay < 15) {
+      days =
+        15 - rentalDay;
+    } else {
+      days =
+        (31 - rentalDay) + 14;
+
+      nextMonth += 1;
+    }
+  }
+
+  if (nextMonth > 12) {
+    nextMonth = 1;
+    nextYear += 1;
+  }
+
+  days =
     Math.max(
       0,
-      Math.round(
-        (
-          nextPaymentDate.getTime() -
-          moveDate.getTime()
-        ) /
-          millisecondsPerDay
-      )
+      Math.min(days, 29)
     );
 
   const amount =
     Math.round(
-      (rent / 30) *
+      dailyRate *
         days *
         100
     ) / 100;
 
+  const nextPaymentDate =
+    `${nextYear}-${String(
+      nextMonth
+    ).padStart(2, "0")}-${String(
+      paymentDay
+    ).padStart(2, "0")}`;
+
   return {
     days,
     amount,
-    nextPaymentDate:
-      nextPaymentDate
-        .toISOString()
-        .slice(0, 10),
+    nextPaymentDate,
   };
 }
 
-export default function ProceedTenantPage() {
+export default function ProceedTenantForm() {
   const router =
     useRouter();
 
@@ -641,7 +649,7 @@ export default function ProceedTenantPage() {
             </Field>
 
             <Field
-              label="Monthly Rent (Â£)"
+              label="Monthly Rent (£)"
             >
               <input
                 required
@@ -664,7 +672,7 @@ export default function ProceedTenantPage() {
             </Field>
 
             <Field
-              label="Deposit (Â£)"
+              label="Deposit (£)"
             >
               <input
                 required
@@ -811,7 +819,7 @@ export default function ProceedTenantPage() {
 
                 <PreviewItem
                   label="Daily Rate"
-                  value={`Â£${(
+                  value={`£${(
                     Number(
                       monthlyRent
                     ) / 30
@@ -827,7 +835,7 @@ export default function ProceedTenantPage() {
 
                 <PreviewItem
                   label="Pro-rata Rent"
-                  value={`Â£${preview.amount.toFixed(
+                  value={`£${preview.amount.toFixed(
                     2
                   )}`}
                 />
@@ -836,7 +844,7 @@ export default function ProceedTenantPage() {
 
               <p className="mt-4 text-sm text-slate-600">
                 Calculated using monthly
-                rent Ã· 30 until the next
+                rent ÷ 30 until the next
                 regular payment date of{" "}
                 <strong>
                   {
@@ -934,3 +942,4 @@ function PreviewItem({
     </div>
   );
 }
+
