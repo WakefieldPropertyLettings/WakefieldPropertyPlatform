@@ -37,9 +37,13 @@ type Viewing = {
   id: string;
   property_id?: number | null;
   applicant_id?: number | null;
+  full_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
   viewing_date?: string | null;
   viewing_time?: string | null;
   status?: string | null;
+  google_calendar_event_id?: string | null;
   notes?: string | null;
 };
 
@@ -548,7 +552,12 @@ export default async function OperationsPage() {
   >
     + Add Viewing
   </Link>
-
+<Link
+  href="/admin/operations/add-task"
+  className="rounded-xl bg-white px-5 py-3 font-bold text-[#071b3a] transition hover:bg-slate-100"
+>
+  + Add Task
+</Link>
   <Link
     href="/admin"
     className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
@@ -725,34 +734,38 @@ export default async function OperationsPage() {
                         </div>
 
                         <div>
-                          <p className="text-xs font-bold uppercase text-slate-400">
-                            Property
-                          </p>
+  <p className="text-xs font-bold uppercase text-slate-400">
+    Applicant
+  </p>
 
-                          <p className="mt-1 font-semibold text-[#071b3a]">
-                            {property?.title ||
-                              "Property not linked"}
-                          </p>
-                        </div>
+  <p className="mt-1 font-semibold text-[#071b3a]">
+    {applicant?.full_name ||
+      viewing.full_name ||
+      "Applicant not linked"}
+  </p>
 
-                        <div>
-                          <p className="text-xs font-bold uppercase text-slate-400">
-                            Applicant
-                          </p>
+  {(applicant?.phone ||
+    viewing.phone) && (
+    <p className="mt-2 text-sm font-medium text-slate-700">
+      {applicant?.phone ||
+        viewing.phone}
+    </p>
+  )}
 
-                          <p className="mt-1 font-semibold text-[#071b3a]">
-                            {applicant?.full_name ||
-                              "Applicant not linked"}
-                          </p>
+  {(applicant?.email ||
+    viewing.email) && (
+    <p className="mt-1 break-all text-sm text-slate-500">
+      {applicant?.email ||
+        viewing.email}
+    </p>
+  )}
 
-                          {applicant?.reference && (
-                            <p className="mt-1 text-xs text-slate-500">
-                              {
-                                applicant.reference
-                              }
-                            </p>
-                          )}
-                        </div>
+  {applicant?.reference && (
+    <p className="mt-1 text-xs text-slate-500">
+      Ref: {applicant.reference}
+    </p>
+  )}
+</div>
 
                         <div className="flex flex-col items-start gap-3 md:items-end">
   <Badge
@@ -762,6 +775,12 @@ export default async function OperationsPage() {
       )
     }
   />
+<Link
+  href={`/admin/operations/viewing?id=${viewing.id}`}
+  className="inline-flex rounded-xl border border-[#071b3a] bg-white px-4 py-2 text-sm font-bold text-[#071b3a] transition hover:bg-slate-50"
+>
+  View / Edit
+</Link>
 
   {viewing.applicant_id &&
   viewing.property_id &&
@@ -774,6 +793,13 @@ export default async function OperationsPage() {
       >
         Proceed with Tenant
       </Link>
+
+      <Link
+  href={`/admin/operations/viewings/${viewing.id}`}
+  className="inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-[#071b3a] transition hover:bg-slate-50"
+>
+  View / Edit
+</Link>
 
       <RejectApplicantButton
         applicantId={
