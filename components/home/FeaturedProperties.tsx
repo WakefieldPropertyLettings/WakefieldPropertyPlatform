@@ -47,9 +47,12 @@ export default function FeaturedProperties() {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .limit(3);
+  .from("properties")
+  .select("*")
+  .eq("website_visible", true)
+  .neq("status", "let_agreed")
+  .order("id", { ascending: false })
+  .limit(3);
 
       if (!isMounted) {
         return;

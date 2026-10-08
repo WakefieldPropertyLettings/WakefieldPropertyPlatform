@@ -102,6 +102,8 @@ export default function EditPropertyPage() {
   
   const [propertyType, setPropertyType] = useState<PropertyType | "">("");
   const [propertyStatus, setPropertyStatus] = useState("available");
+    const [internalName, setInternalName] = useState("");
+  const [websiteVisible, setWebsiteVisible] = useState(true);
 
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
@@ -205,6 +207,12 @@ export default function EditPropertyPage() {
 
       setPropertyType(loadedPropertyType);
       setPropertyStatus(property.status ?? "available");
+      setInternalName(property.internal_name ?? "");
+setWebsiteVisible(
+  property.status === "let_agreed"
+    ? false
+    : property.website_visible ?? true
+);
 
       setBedrooms(
         property.bedrooms !== null && property.bedrooms !== undefined
@@ -689,8 +697,16 @@ const safeFileName = sanitiseFileName(
           deposit: deposit.trim(),
           available_from: availableFrom || null,
           property_type: propertyType,
-          status: propertyStatus,
-          bedrooms: bedrooms ? Number(bedrooms) : 0,
+status: propertyStatus,
+
+internal_name: internalName.trim() || null,
+
+website_visible:
+  propertyStatus === "let_agreed"
+    ? false
+    : websiteVisible,
+
+bedrooms: bedrooms ? Number(bedrooms) : 0,
           bathrooms: bathrooms ? Number(bathrooms) : 0,
           area: area.trim(),
 
@@ -809,7 +825,41 @@ const safeFileName = sanitiseFileName(
               {statusMessage}
             </div>
           )}
+<div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+  <h2 className="text-lg font-bold text-[#0B1F3A]">
+    Internal Property Identification
+  </h2>
 
+  <p className="mt-1 text-sm text-slate-600">
+    This information is for Wakefield Property Lettings staff only.
+    It will not be displayed to tenants on the public website.
+  </p>
+
+  <div className="mt-5">
+    <label
+      htmlFor="internal-name"
+      className="mb-2 block font-semibold"
+    >
+      Internal Property Name
+    </label>
+
+    <input
+      id="internal-name"
+      type="text"
+      value={internalName}
+      onChange={(event) =>
+        setInternalName(event.target.value)
+      }
+      placeholder="Example: Glastonbury Avenue - Room 1"
+      className="w-full rounded-lg border p-3"
+    />
+
+    <p className="mt-2 text-sm text-slate-500">
+      Examples: Plumpton Terrace - Room 3, Lawfield Lane -
+      Studio 2, Gordon Street - Whole House.
+    </p>
+  </div>
+</div>
           <div>
             <label
               htmlFor="property-title"
@@ -1011,9 +1061,15 @@ const safeFileName = sanitiseFileName(
   <select
     id="property-status"
     value={propertyStatus}
-    onChange={(event) =>
-      setPropertyStatus(event.target.value)
-    }
+    onChange={(event) => {
+  const nextStatus = event.target.value;
+
+  setPropertyStatus(nextStatus);
+
+  if (nextStatus === "let_agreed") {
+    setWebsiteVisible(false);
+  }
+}}
     className="w-full rounded-lg border p-3"
   >
     <option value="available">
@@ -1028,6 +1084,31 @@ const safeFileName = sanitiseFileName(
       Let Agreed
     </option>
   </select>
+  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+  <label className="flex cursor-pointer items-start gap-3">
+    <input
+      type="checkbox"
+      checked={websiteVisible}
+      disabled={propertyStatus === "let_agreed"}
+      onChange={(event) =>
+        setWebsiteVisible(event.target.checked)
+      }
+      className="mt-1 h-5 w-5"
+    />
+
+    <span>
+      <span className="block font-semibold text-[#0B1F3A]">
+        Show on public website
+      </span>
+
+      <span className="mt-1 block text-sm text-slate-500">
+        {propertyStatus === "let_agreed"
+          ? "Let Agreed properties are automatically hidden from the public website."
+          : "Turn this off to keep the property in Admin without advertising it publicly."}
+      </span>
+    </span>
+  </label>
+</div>
 </div>
             <div>
               <label

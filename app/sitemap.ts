@@ -119,11 +119,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
 
     const { data: properties, error } = await supabase
-      .from("properties")
-      .select("id")
-      .order("id", {
-        ascending: false,
-      });
+  .from("properties")
+  .select("id")
+  .eq("website_visible", true)
+  .neq("status", "let_agreed")
+  .order("id", {
+    ascending: false,
+  });
 
     if (error) {
       console.error(

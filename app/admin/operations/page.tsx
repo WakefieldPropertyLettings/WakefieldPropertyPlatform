@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -129,7 +129,7 @@ function formatTime(
   time?: string | null
 ) {
   if (!time) {
-    return "—";
+    return "â€”";
   }
 
   return time.slice(0, 5);
@@ -142,7 +142,7 @@ function formatMoney(
     value === null ||
     value === undefined
   ) {
-    return "—";
+    return "â€”";
   }
 
   return new Intl.NumberFormat(
@@ -994,6 +994,9 @@ export default async function OperationsPage() {
                             applicant.budget
                           )}
                         </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-600">
+                          {applicant.phone || "No phone number"}
+</p>
                       </div>
 
                       <div className="md:text-right">

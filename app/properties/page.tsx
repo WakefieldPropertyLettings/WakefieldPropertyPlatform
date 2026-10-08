@@ -68,11 +68,13 @@ export default async function PropertiesPage() {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("properties")
-    .select("*")
-    .order("id", {
-      ascending: false,
-    });
+  .from("properties")
+  .select("*")
+  .eq("website_visible", true)
+  .neq("status", "let_agreed")
+  .order("id", {
+    ascending: false,
+  });
 
   if (error) {
     console.error(

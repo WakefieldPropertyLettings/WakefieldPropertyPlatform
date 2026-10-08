@@ -46,10 +46,12 @@ export default async function PropertySEOPage({
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("properties")
-    .select("*")
-    .in("property_type", propertyTypes)
-    .order("id", { ascending: false });
+  .from("properties")
+  .select("*")
+  .eq("website_visible", true)
+  .neq("status", "let_agreed")
+  .in("property_type", propertyTypes)
+  .order("id", { ascending: false });
 
   if (error) {
     console.error("SEO property page error:", error);

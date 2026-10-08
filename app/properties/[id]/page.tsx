@@ -93,7 +93,9 @@ export async function generateMetadata({
       `
     )
     .eq("id", propertyId)
-    .single();
+.eq("website_visible", true)
+.neq("status", "let_agreed")
+.single();
 
   if (error || !data) {
     return {
@@ -237,14 +239,13 @@ export default async function PropertyDetailsPage({
      LOAD PROPERTY
   --------------------------------------------------------- */
 
-  const {
-    data,
-    error: propertyError,
-  } = await supabase
-    .from("properties")
-    .select("*")
-    .eq("id", propertyId)
-    .single();
+  const { data, error: propertyError } = await supabase
+  .from("properties")
+  .select("*")
+  .eq("id", propertyId)
+  .eq("website_visible", true)
+  .neq("status", "let_agreed")
+  .single();
 
   if (
     propertyError ||
